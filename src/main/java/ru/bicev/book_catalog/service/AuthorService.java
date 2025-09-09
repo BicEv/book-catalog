@@ -3,8 +3,8 @@ package ru.bicev.book_catalog.service;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.transaction.Transactional;
 import ru.bicev.book_catalog.dto.AuthorDto;
 import ru.bicev.book_catalog.dto.AuthorRequest;
 import ru.bicev.book_catalog.entity.Author;
@@ -30,14 +30,14 @@ public class AuthorService {
 
     public AuthorDto findAuthorById(UUID authorId) {
         Author foundAuthor = authorRepository.findById(authorId)
-                .orElseThrow(() -> new AuthorNotFoundException("Author was not found for id: " + authorId.toString()));
+                .orElseThrow(() -> new AuthorNotFoundException(String.format("Author not found: %s", authorId)));
         return AuthorMapper.toDto(foundAuthor);
     }
 
     @Transactional
     public AuthorDto updateAuthor(UUID authorId, AuthorRequest authorRequest) {
         Author foundAuthor = authorRepository.findById(authorId)
-                .orElseThrow(() -> new AuthorNotFoundException("Author was not found for id: " + authorId.toString()));
+                .orElseThrow(() -> new AuthorNotFoundException(String.format("Author not found: %s", authorId)));
         AuthorMapper.updateEntity(foundAuthor, authorRequest);
         Author updatedAuthor = authorRepository.save(foundAuthor);
         return AuthorMapper.toDto(updatedAuthor);
@@ -46,7 +46,7 @@ public class AuthorService {
     @Transactional
     public void deleteAuthorById(UUID authorId) {
         if (!authorRepository.existsById(authorId)) {
-            throw new AuthorNotFoundException("Author was not found for id: " + authorId.toString());
+            throw new AuthorNotFoundException(String.format("Author not found: %s", authorId));
         }
         authorRepository.deleteById(authorId);
     }
