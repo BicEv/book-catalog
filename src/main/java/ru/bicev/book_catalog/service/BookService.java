@@ -66,6 +66,10 @@ public class BookService {
         bookRepository.delete(foundBook);
     }
 
+    public Page<BookDto> findAll(Pageable pageable) {
+        return bookRepository.findAll(pageable).map(BookMapper::toDto);
+    }
+
     public Page<BookDto> findByAuthorId(UUID authorId, Pageable pageable) {
         return bookRepository.findByAuthorId(authorId, pageable).map(BookMapper::toDto);
     }
