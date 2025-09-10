@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -18,11 +20,13 @@ import ru.bicev.book_catalog.exception.BookNotFoundException;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     @ExceptionHandler(AuthorNotFoundException.class)
     public ResponseEntity<ErrorDto> handleAuthorNotFoundException(AuthorNotFoundException ex) {
         HttpStatus status = HttpStatus.NOT_FOUND;
         ErrorDto error = extractError(ex, "AUTHOR_NOT_FOUND", status);
-
+        logger.error("AuthorNotFoundException: {}", ex.getMessage());
         return ResponseEntity.status(status).body(error);
     }
 
@@ -30,6 +34,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorDto> handleBookNotFoundException(BookNotFoundException ex) {
         HttpStatus status = HttpStatus.NOT_FOUND;
         ErrorDto error = extractError(ex, "BOOK_NOT_FOUND", status);
+        logger.error("BookNotFoundException: {}", ex.getMessage());
         return ResponseEntity.status(status).body(error);
     }
 
@@ -44,6 +49,7 @@ public class GlobalExceptionHandler {
                         LocalDateTime.now()
 
                 )).collect(Collectors.toList());
+        logger.error("ValidationException: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
     }
 
@@ -51,7 +57,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorDto> handleRuntimeException(RuntimeException ex) {
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
         ErrorDto error = extractError(ex, "INTERNAL_SERVER_ERROR", status);
-        return ResponseEntity.status(500).body(error);
+        logger.error("RuntimeException: {}", ex.getMessage(), ex);
+        return ResponseEntity.status(status).body(error);
     }
 
     private ErrorDto extractError(RuntimeException ex, String errorCode, HttpStatus status) {

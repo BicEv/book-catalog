@@ -2,6 +2,8 @@ package ru.bicev.book_catalog.service;
 
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +18,7 @@ import ru.bicev.book_catalog.util.AuthorMapper;
 public class AuthorService {
 
     private final AuthorRepository authorRepository;
+    private static final Logger logger = LoggerFactory.getLogger(AuthorService.class);
 
     public AuthorService(AuthorRepository authorRepository) {
         this.authorRepository = authorRepository;
@@ -23,23 +26,28 @@ public class AuthorService {
 
     @Transactional
     public AuthorDto createAuthor(AuthorRequest authorRequest) {
+        logger.info("Creating author: {}", authorRequest.lastName());
         Author author = AuthorMapper.toEntityFromRequest(authorRequest);
         Author savedAuthor = authorRepository.save(author);
+        logger.info("Author created: {}", savedAuthor.getId());
         return AuthorMapper.toDto(savedAuthor);
     }
 
     public AuthorDto findAuthorById(UUID authorId) {
         Author foundAuthor = authorRepository.findById(authorId)
                 .orElseThrow(() -> new AuthorNotFoundException(String.format("Author not found: %s", authorId)));
+        logger.debug("Fetched author by id {}: {}", authorId, foundAuthor);
         return AuthorMapper.toDto(foundAuthor);
     }
 
     @Transactional
     public AuthorDto updateAuthor(UUID authorId, AuthorRequest authorRequest) {
+        logger.info("Updating author: {}", authorId);
         Author foundAuthor = authorRepository.findById(authorId)
                 .orElseThrow(() -> new AuthorNotFoundException(String.format("Author not found: %s", authorId)));
         AuthorMapper.updateEntity(foundAuthor, authorRequest);
         Author updatedAuthor = authorRepository.save(foundAuthor);
+        logger.info("Author updated: {}", updatedAuthor.getId());
         return AuthorMapper.toDto(updatedAuthor);
     }
 
@@ -49,6 +57,7 @@ public class AuthorService {
             throw new AuthorNotFoundException(String.format("Author not found: %s", authorId));
         }
         authorRepository.deleteById(authorId);
+        logger.info("Author: {} was deleted", authorId);
     }
 
 }

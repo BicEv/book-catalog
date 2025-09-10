@@ -3,6 +3,8 @@ package ru.bicev.book_catalog.controller;
 import java.net.URI;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +30,7 @@ import ru.bicev.book_catalog.util.Genre;
 public class BookRestController {
 
     private final BookService bookService;
+    private static final Logger logger = LoggerFactory.getLogger(BookRestController.class);
 
     public BookRestController(BookService bookService) {
         this.bookService = bookService;
@@ -35,6 +38,7 @@ public class BookRestController {
 
     @PostMapping
     public ResponseEntity<BookDto> createBook(@Valid @RequestBody BookRequest bookRequest) {
+        logger.info("POST /api/books title: {}, authorId: {}", bookRequest.title(), bookRequest.authorId());
         BookDto created = bookService.createBook(bookRequest);
         URI location = URI.create("/api/books/" + created.id().toString());
         return ResponseEntity.created(location).body(created);
@@ -42,18 +46,21 @@ public class BookRestController {
 
     @GetMapping("/{bookId}")
     public ResponseEntity<BookDto> getBookById(@PathVariable UUID bookId) {
+        logger.info("GET /api/books bookId: {}", bookId);
         BookDto book = bookService.findBookById(bookId);
         return ResponseEntity.ok().body(book);
     }
 
     @PutMapping("/{bookId}")
     public ResponseEntity<BookDto> updateBook(@PathVariable UUID bookId, @Valid @RequestBody BookRequest bookRequest) {
+        logger.info("PUT /api/books bookId: {}", bookId);
         BookDto updated = bookService.updateBook(bookId, bookRequest);
         return ResponseEntity.ok().body(updated);
     }
 
     @DeleteMapping("/{bookId}")
     public ResponseEntity<Void> deleteBook(@PathVariable UUID bookId) {
+        logger.info("DELETE /api/books bookId: {}", bookId);
         bookService.deleteBook(bookId);
         return ResponseEntity.noContent().build();
     }
@@ -68,6 +75,9 @@ public class BookRestController {
             @RequestParam(required = false) Genre genre,
             @RequestParam(required = false) String title,
             @PageableDefault(size = 10, sort = "title") Pageable pageable) {
+        logger.info(
+                "GET /api/books authorId: {}, name: {}, releaseYear: {}, startYear: {}, endYear: {}, genre: {}, title: {}",
+                authorId, name, releaseYear, startYear, endYear, genre, title);
         PagedResponse<BookDto> response = bookService.findBooks(authorId, name, releaseYear, startYear, endYear, genre,
                 title,
                 pageable);

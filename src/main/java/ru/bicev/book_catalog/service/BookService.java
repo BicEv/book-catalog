@@ -2,6 +2,8 @@ package ru.bicev.book_catalog.service;
 
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -24,6 +26,7 @@ public class BookService {
 
     private final AuthorRepository authorRepository;
     private final BookRepository bookRepository;
+    private static final Logger logger = LoggerFactory.getLogger(BookService.class);
 
     public BookService(AuthorRepository authorRepository, BookRepository bookRepository) {
         this.authorRepository = authorRepository;
@@ -33,13 +36,16 @@ public class BookService {
     private Author extractAuthor(UUID authorId) {
         return authorRepository.findById(authorId)
                 .orElseThrow(() -> new AuthorNotFoundException(String.format("Author not found: %s", authorId)));
+
     }
 
     @Transactional
     public BookDto createBook(BookRequest bookRequest) {
+        logger.info("Creating a book: {}", bookRequest.title());
         Author author = extractAuthor(bookRequest.authorId());
         Book book = BookMapper.toEntityFromRequest(bookRequest, author);
         Book savedBook = bookRepository.save(book);
+        logger.info("Book created: {}", savedBook.getId());
         return BookMapper.toDto(savedBook);
     }
 
@@ -53,11 +59,14 @@ public class BookService {
     public BookDto updateBook(UUID bookId, BookRequest bookRequest) {
         Book foundBook = bookRepository.findById(bookId)
                 .orElseThrow(() -> new BookNotFoundException(String.format("Book not found: %s", bookId)));
+        logger.info("Updating book: {}", bookId);
         Author newAuthor = extractAuthor(bookRequest.authorId());
         BookMapper.updateEntity(foundBook, bookRequest);
         foundBook.setAuthor(newAuthor);
         bookRepository.save(foundBook);
+        logger.info("Book: {} updated", foundBook.getId());
         return BookMapper.toDto(foundBook);
+
     }
 
     @Transactional
@@ -65,6 +74,7 @@ public class BookService {
         Book foundBook = bookRepository.findById(bookId)
                 .orElseThrow(() -> new BookNotFoundException(String.format("Book not found: %s", bookId)));
         bookRepository.delete(foundBook);
+        logger.info("Book: {} was deleted", bookId);
     }
 
     public PagedResponse<BookDto> findBooks(
@@ -95,30 +105,37 @@ public class BookService {
     }
 
     public Page<BookDto> findAll(Pageable pageable) {
+        logger.debug("Fetched list of books");
         return bookRepository.findAll(pageable).map(BookMapper::toDto);
     }
 
     public Page<BookDto> findByAuthorId(UUID authorId, Pageable pageable) {
+        logger.debug("Fetched list of books by authorId: {}", authorId);
         return bookRepository.findByAuthorId(authorId, pageable).map(BookMapper::toDto);
     }
 
     public Page<BookDto> findByAuthorName(String name, Pageable pageable) {
+        logger.debug("Fetched list of books by author name: {}", name);
         return bookRepository.findByAuthorName(name, pageable).map(BookMapper::toDto);
     }
 
     public Page<BookDto> findByReleaseYear(int releaseYear, Pageable pageable) {
+        logger.debug("Fetched list of books by release year: {}", releaseYear);
         return bookRepository.findByReleaseYear(releaseYear, pageable).map(BookMapper::toDto);
     }
 
     public Page<BookDto> findByReleaseYearBetween(int startYear, int endYear, Pageable pageable) {
+        logger.debug("Fetched list of books by years from: {} to {}", startYear, endYear);
         return bookRepository.findByReleaseYearBetween(startYear, endYear, pageable).map(BookMapper::toDto);
     }
 
     public Page<BookDto> findByGenre(Genre genre, Pageable pageable) {
+        logger.debug("Fetched list of books by genre: {}", genre);
         return bookRepository.findByGenre(genre, pageable).map(BookMapper::toDto);
     }
 
     public Page<BookDto> findByTitleContaining(String title, Pageable pageable) {
+        logger.debug("Fetched list of books by title: {}", title);
         return bookRepository.findByTitleContainingIgnoreCase(title, pageable).map(BookMapper::toDto);
     }
 
