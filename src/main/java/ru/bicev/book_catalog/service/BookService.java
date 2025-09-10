@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import ru.bicev.book_catalog.dto.BookDto;
 import ru.bicev.book_catalog.dto.BookRequest;
+import ru.bicev.book_catalog.dto.PagedResponse;
 import ru.bicev.book_catalog.entity.Author;
 import ru.bicev.book_catalog.entity.Book;
 import ru.bicev.book_catalog.exception.AuthorNotFoundException;
@@ -66,6 +67,33 @@ public class BookService {
         bookRepository.delete(foundBook);
     }
 
+    public PagedResponse<BookDto> findBooks(
+            UUID authorId,
+            String name,
+            Integer releaseYear,
+            Integer startYear,
+            Integer endYear,
+            Genre genre,
+            String title,
+            Pageable pageable) {
+
+        if (authorId != null) {
+            return toPagedResponse(findByAuthorId(authorId, pageable));
+        } else if (name != null) {
+            return toPagedResponse(findByAuthorName(name, pageable));
+        } else if (releaseYear != null) {
+            return toPagedResponse(findByReleaseYear(releaseYear, pageable));
+        } else if (startYear != null && endYear != null && startYear <= endYear) {
+            return toPagedResponse(findByReleaseYearBetween(startYear, endYear, pageable));
+        } else if (genre != null) {
+            return toPagedResponse(findByGenre(genre, pageable));
+        } else if (title != null) {
+            return toPagedResponse(findByTitleContaining(title, pageable));
+        } else {
+            return toPagedResponse(findAll(pageable));
+        }
+    }
+
     public Page<BookDto> findAll(Pageable pageable) {
         return bookRepository.findAll(pageable).map(BookMapper::toDto);
     }
@@ -92,6 +120,17 @@ public class BookService {
 
     public Page<BookDto> findByTitleContaining(String title, Pageable pageable) {
         return bookRepository.findByTitleContainingIgnoreCase(title, pageable).map(BookMapper::toDto);
+    }
+
+    private <T> PagedResponse<T> toPagedResponse(Page<T> page) {
+        return new PagedResponse<>(
+                page.getContent(),
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.isFirst(),
+                page.isLast());
     }
 
 }

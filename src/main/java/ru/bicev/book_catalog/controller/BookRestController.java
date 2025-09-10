@@ -3,7 +3,6 @@ package ru.bicev.book_catalog.controller;
 import java.net.URI;
 import java.util.UUID;
 
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 import ru.bicev.book_catalog.dto.BookDto;
 import ru.bicev.book_catalog.dto.BookRequest;
+import ru.bicev.book_catalog.dto.PagedResponse;
 import ru.bicev.book_catalog.service.BookService;
 import ru.bicev.book_catalog.util.Genre;
 
@@ -59,7 +59,7 @@ public class BookRestController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<BookDto>> getBooks(
+    public ResponseEntity<PagedResponse<BookDto>> getBooks(
             @RequestParam(required = false) UUID authorId,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) Integer releaseYear,
@@ -68,24 +68,11 @@ public class BookRestController {
             @RequestParam(required = false) Genre genre,
             @RequestParam(required = false) String title,
             @PageableDefault(size = 10, sort = "title") Pageable pageable) {
-        Page<BookDto> page;
-        if (authorId != null) {
-            page = bookService.findByAuthorId(authorId, pageable);
-        } else if (name != null) {
-            page = bookService.findByAuthorName(name, pageable);
-        } else if (releaseYear != null) {
-            page = bookService.findByReleaseYear(releaseYear, pageable);
-        } else if (startYear != null && endYear != null && startYear <= endYear) {
-            page = bookService.findByReleaseYearBetween(startYear, endYear, pageable);
-        } else if (genre != null) {
-            page = bookService.findByGenre(genre, pageable);
-        } else if (title != null) {
-            page = bookService.findByTitleContaining(title, pageable);
-        } else {
-            page = bookService.findAll(pageable);
-        }
+        PagedResponse<BookDto> response = bookService.findBooks(authorId, name, releaseYear, startYear, endYear, genre,
+                title,
+                pageable);
 
-        return ResponseEntity.ok(page);
+        return ResponseEntity.ok(response);
     }
 
 }
