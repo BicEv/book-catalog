@@ -88,7 +88,7 @@ public class BookServiceTest {
 
         assertEquals(entity1.getId(), created.id());
         assertEquals(entity1.getTitle(), created.title());
-        assertEquals(entity1.getAuthor().getId(), created.author().getId());
+        assertEquals(entity1.getAuthor().getId(), created.author().id());
 
         verify(authorRepository, times(1)).findById(authId1);
         verify(bookRepository, times(1)).save(any());
@@ -112,7 +112,7 @@ public class BookServiceTest {
         assertEquals(entity1.getId(), found.id());
         assertEquals(entity1.getTitle(), found.title());
         assertEquals(entity1.getGenre(), found.genre());
-        assertEquals(entity1.getAuthor().getId(), found.author().getId());
+        assertEquals(entity1.getAuthor().getId(), found.author().id());
 
         verify(bookRepository, times(1)).findById(bookId1);
 
@@ -133,7 +133,7 @@ public class BookServiceTest {
         BookDto updated = bookService.updateBook(bookId1, request);
         assertEquals(entity1.getId(), updated.id());
         assertEquals(entity1.getTitle(), updated.title());
-        assertEquals(entity1.getAuthor().getId(), updated.author().getId());
+        assertEquals(entity1.getAuthor().getId(), updated.author().id());
 
         verify(bookRepository, times(1)).save(any());
     }

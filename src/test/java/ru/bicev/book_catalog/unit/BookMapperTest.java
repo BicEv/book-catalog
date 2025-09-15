@@ -13,6 +13,7 @@ import ru.bicev.book_catalog.dto.BookDto;
 import ru.bicev.book_catalog.dto.BookRequest;
 import ru.bicev.book_catalog.entity.Author;
 import ru.bicev.book_catalog.entity.Book;
+import ru.bicev.book_catalog.util.AuthorMapper;
 import ru.bicev.book_catalog.util.BookMapper;
 import ru.bicev.book_catalog.util.Genre;
 
@@ -29,7 +30,7 @@ public class BookMapperTest {
                 "France");
         request = new BookRequest("1984", 1949, Genre.FANTASY, UUID.randomUUID());
         dto = new BookDto(UUID.fromString("321e4567-e89b-12d3-a456-426655440000"), "The Hobbit", 1937, Genre.FANTASY,
-                author);
+                AuthorMapper.toDto(author));
         entity = new Book(UUID.fromString("100e4567-e89b-12d3-a456-426655440000"), "Crime and Punishment", 1866,
                 Genre.CLASSICS,
                 author);
