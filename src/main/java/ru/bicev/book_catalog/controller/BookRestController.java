@@ -41,6 +41,7 @@ public class BookRestController {
         logger.info("POST /api/books title: {}, authorId: {}", bookRequest.title(), bookRequest.authorId());
         BookDto created = bookService.createBook(bookRequest);
         URI location = URI.create("/api/books/" + created.id().toString());
+        logger.info("Created URI: {}", location.toString());
         return ResponseEntity.created(location).body(created);
     }
 
