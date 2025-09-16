@@ -18,7 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-public class GlobalExceptionHandlerIntegrationTest {
+public class GlobalExceptionHandlerIT {
 
     @Autowired
     private MockMvc mockMvc;

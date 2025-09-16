@@ -28,7 +28,7 @@ import ru.bicev.book_catalog.util.Genre;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-public class BookControllerIntergrationTest {
+public class BookControllerIT {
 
     @Autowired
     private MockMvc mockMvc;
