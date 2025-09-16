@@ -21,6 +21,10 @@ jobs:
           java-version: '21'
           cache: maven
 
+      - name: Unit tests
+        run: mvn -B -V -DskipIT verify
+
+
       - name: Upload unit test reports
         uses: actions/upload-artifact@v4
         with:
@@ -49,6 +53,7 @@ jobs:
       SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/book_catalog_test
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_DATASOURCE_DRIVER: org.postgresql.Driver
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -76,7 +81,7 @@ jobs:
 
 
       - name: Run integration tests (failsafe)
-        run: mvn -B -V -DskipITs=false verify
+        run: mvn -B -V verify
 
       - name: Upload integration reports
         uses: actions/upload-artifact@v4
