@@ -1,0 +1,78 @@
+name: CI
+
+on: 
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Build & Unit tests
+    runs-on: ubuntu-latest
+    steps: 
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Upload unit test reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: target/surefire-reports
+
+integration:
+  name: Integration tests (with Postgres)
+  needs: build
+  runs-on: ubuntu-latest
+  services:
+    postgres:
+      image: postgres:14
+      env:
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+        POSTGRES_DB: book_catalog_test
+      options: >-
+        --health-cmd="pg_isready -U postgres"
+        --health-interval=5s
+        --health-timeout=5s
+        --health-retries=10
+      ports: 5432
+  env:
+    SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/book_catalog_test
+    SPRING_DATASOURCE_USERNAME: postgres
+    SPRING_DATASOURCE_PASSWORD: postgres
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: '17'
+        cache: maven
+
+    - name: Install postgres client (for readiness check)
+      run: sudo apt-get update sudo apt-get install -y postgresql-client
+
+    - name: Wait Postgres to be ready
+      run: for i in $(seq 1 30); do pg_isready -h localhost -p 5432 -U posgtres && break echo "Waiting for postgres..." sleep 2 done
+
+    - name: Run integration tests (failsafe)
+      run: mvn -B -V -DskipITs=false verify
+
+    - name: Upload integration reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: failsafe-reports
+        path: target/failsafe-reports
+    
+    
+          
