@@ -13,6 +13,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import ru.bicev.book_catalog.entity.Author;
 import ru.bicev.book_catalog.repo.AuthorRepository;
+import ru.bicev.book_catalog.repo.BookRepository;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -29,12 +30,16 @@ public class AuthorControllerIT {
     @Autowired
     private AuthorRepository authorRepository;
 
+    @Autowired
+    private BookRepository bookRepository;
+
     private Author first;
     private Author second;
     private Author third;
 
     @BeforeEach
     void setUp() {
+        bookRepository.deleteAll();
         authorRepository.deleteAll();
         first = authorRepository.save(new Author(UUID.randomUUID(), "Leo", "Tolstoy", 1828, "Russia"));
         second = authorRepository.save(new Author(UUID.randomUUID(), "John", "Tolkien", 1892, "UK"));

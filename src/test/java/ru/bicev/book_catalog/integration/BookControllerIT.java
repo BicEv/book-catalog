@@ -18,6 +18,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 import ru.bicev.book_catalog.entity.Author;
 import ru.bicev.book_catalog.entity.Book;
@@ -49,8 +50,8 @@ public class BookControllerIT {
 
     @BeforeEach
     void setUp() {
-        authorRepository.deleteAll();
         bookRepository.deleteAll();
+        authorRepository.deleteAll();
 
         first = authorRepository.save(new Author(UUID.randomUUID(), "First", "Author", 1900, "One"));
         second = authorRepository.save(new Author(UUID.randomUUID(), "Second", "Writer", 1969, "Two"));
