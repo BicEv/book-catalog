@@ -22,7 +22,7 @@ jobs:
           cache: maven
 
       - name: Unit tests
-        run: mvn -B -V -DskipIT verify
+        run: mvn -B -V test
 
 
       - name: Upload unit test reports
@@ -81,7 +81,7 @@ jobs:
 
 
       - name: Run integration tests (failsafe)
-        run: mvn -B -V verify
+        run: mvn -B -V -DskipITs=false verify
 
       - name: Upload integration reports
         uses: actions/upload-artifact@v4
