@@ -89,7 +89,11 @@ public class BookMapperTest {
         assertEquals(book.getTitle(), dto.title());
         assertEquals(book.getReleaseYear(), dto.releaseYear());
         assertEquals(book.getGenre(), dto.genre());
-        assertEquals(book.getAuthor(), dto.author());
+        assertEquals(book.getAuthor().getId(), dto.author().id());
+        assertEquals(book.getAuthor().getFirstName(), dto.author().firstName());
+        assertEquals(book.getAuthor().getLastName(), dto.author().lastName());
+        assertEquals(book.getAuthor().getBirthYear(), dto.author().birthYear());
+        assertEquals(book.getAuthor().getCountry(), dto.author().country());
 
     }
 
@@ -106,7 +110,11 @@ public class BookMapperTest {
         assertEquals(dto.title(), book.getTitle());
         assertEquals(dto.releaseYear(), book.getReleaseYear());
         assertEquals(dto.genre(), book.getGenre());
-        assertEquals(dto.author(), book.getAuthor());
+        assertEquals(dto.author().id(), book.getAuthor().getId());
+        assertEquals(dto.author().firstName(), book.getAuthor().getFirstName());
+        assertEquals(dto.author().lastName(), book.getAuthor().getLastName());
+        assertEquals(dto.author().birthYear(), book.getAuthor().getBirthYear());
+        assertEquals(dto.author().country(), book.getAuthor().getCountry());
     }
 
 }
