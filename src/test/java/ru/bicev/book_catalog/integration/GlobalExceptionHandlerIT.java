@@ -130,4 +130,29 @@ public class GlobalExceptionHandlerIT {
                 .andExpect(jsonPath("$.errorCode").value("INTERNAL_SERVER_ERROR"));
     }
 
+    @Test
+    void testDataIntegrityViolation() throws Exception {
+        String requestJson = """
+                {
+                    "firstName": "Test",
+                    "lastName": "Writer",
+                    "birthYear": 1900,
+                    "country": "USA"
+                }
+
+                """;
+        mockMvc.perform(post("/api/authors")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/api/authors")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.statusCode").value(409))
+                .andExpect(jsonPath("$.errorCode").value("CONFLICT"));
+
+    }
+
 }

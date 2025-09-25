@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -58,6 +59,14 @@ public class GlobalExceptionHandler {
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
         ErrorDto error = extractError(ex, "INTERNAL_SERVER_ERROR", status);
         logger.error("RuntimeException: {}", ex.getMessage(), ex);
+        return ResponseEntity.status(status).body(error);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorDto> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
+        HttpStatus status = HttpStatus.CONFLICT;
+        ErrorDto error = extractError(ex, "CONFLICT", status);
+        logger.error("DataIntegrityViolationException: {}", ex.getMessage(), ex);
         return ResponseEntity.status(status).body(error);
     }
 
