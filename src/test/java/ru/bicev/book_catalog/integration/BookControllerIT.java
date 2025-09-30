@@ -15,11 +15,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
 
+import ru.bicev.book_catalog.TestSecurityConfig;
 import ru.bicev.book_catalog.entity.Author;
 import ru.bicev.book_catalog.entity.Book;
 import ru.bicev.book_catalog.repo.AuthorRepository;
@@ -28,6 +29,7 @@ import ru.bicev.book_catalog.util.Genre;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Import(TestSecurityConfig.class)
 @ActiveProfiles("test")
 public class BookControllerIT {
 
