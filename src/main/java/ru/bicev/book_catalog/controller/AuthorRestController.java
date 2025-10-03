@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -48,6 +49,7 @@ public class AuthorRestController {
     }
 
     @PutMapping("/{authorId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AuthorDto> updateAuthor(@PathVariable UUID authorId,
             @Valid @RequestBody AuthorRequest authorRequest) {
         logger.info("PUT /api/authors authorId: {}", authorId);
@@ -56,6 +58,7 @@ public class AuthorRestController {
     }
 
     @DeleteMapping("/{authorId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteAuthor(@PathVariable UUID authorId) {
         logger.info("DELETE /api/authors authorId: {}", authorId);
         authorService.deleteAuthorById(authorId);

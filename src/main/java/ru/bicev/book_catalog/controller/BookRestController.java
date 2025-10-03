@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -53,6 +54,7 @@ public class BookRestController {
     }
 
     @PutMapping("/{bookId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BookDto> updateBook(@PathVariable UUID bookId, @Valid @RequestBody BookRequest bookRequest) {
         logger.info("PUT /api/books bookId: {}", bookId);
         BookDto updated = bookService.updateBook(bookId, bookRequest);
@@ -60,6 +62,7 @@ public class BookRestController {
     }
 
     @DeleteMapping("/{bookId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteBook(@PathVariable UUID bookId) {
         logger.info("DELETE /api/books bookId: {}", bookId);
         bookService.deleteBook(bookId);
