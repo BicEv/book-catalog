@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import ru.bicev.book_catalog.security.dto.TokenDto;
 import ru.bicev.book_catalog.security.dto.UserRequest;
 import ru.bicev.book_catalog.security.jwt.JwtUtil;
 
@@ -25,14 +26,14 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody UserRequest userRequest) {
+    public ResponseEntity<TokenDto> login(@RequestBody UserRequest userRequest) {
         try {
             Authentication auth = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(userRequest.username(), userRequest.password()));
-            String token = jwtUtil.generateToken(userRequest.username());
+            TokenDto token = new TokenDto(jwtUtil.generateToken(userRequest.username()));
             return ResponseEntity.ok(token);
         } catch (Exception e) {
-            return ResponseEntity.status(401).body("Invalid credentials");
+            return ResponseEntity.status(401).build();
         }
     }
 
