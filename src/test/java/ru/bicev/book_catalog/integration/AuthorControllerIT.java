@@ -7,15 +7,21 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
-import ru.bicev.book_catalog.TestSecurityConfig;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import ru.bicev.book_catalog.entity.Author;
 import ru.bicev.book_catalog.repo.AuthorRepository;
 import ru.bicev.book_catalog.repo.BookRepository;
+import ru.bicev.book_catalog.security.entity.User;
+import ru.bicev.book_catalog.security.repo.UserRepository;
+import ru.bicev.book_catalog.security.util.Role;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -23,7 +29,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Import(TestSecurityConfig.class)
 @ActiveProfiles("test")
 public class AuthorControllerIT {
 
@@ -36,14 +41,34 @@ public class AuthorControllerIT {
     @Autowired
     private BookRepository bookRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     private Author first;
     private Author second;
     private Author third;
+
+    private User user;
+    private User admin;
+    private final String USERNAME = "testUser";
+    private final String ADMINNAME = "testAdmin";
+    private final String PASSWORD = "test_password";
 
     @BeforeEach
     void setUp() {
         bookRepository.deleteAll();
         authorRepository.deleteAll();
+        userRepository.deleteAll();
+
+        user = new User(null, USERNAME, passwordEncoder.encode(PASSWORD), Role.USER);
+        userRepository.save(user);
+
+        admin = new User(null, ADMINNAME, passwordEncoder.encode(PASSWORD), Role.ADMIN);
+        userRepository.save(admin);
+
         first = authorRepository.save(new Author(UUID.randomUUID(), "Leo", "Tolstoy", 1828, "Russia"));
         second = authorRepository.save(new Author(UUID.randomUUID(), "John", "Tolkien", 1892, "UK"));
         third = authorRepository.save(new Author(UUID.randomUUID(), "ToDelete", "ToDelete", 500, "NotACounty"));
@@ -51,6 +76,8 @@ public class AuthorControllerIT {
 
     @Test
     void shouldCreateAndFetchAuthor() throws Exception {
+        String token = getToken(USERNAME, PASSWORD);
+
         String requestJson = """
                 {
                     "firstName": "Cormac",
@@ -61,6 +88,7 @@ public class AuthorControllerIT {
                 """;
 
         mockMvc.perform(post("/api/authors")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson))
                 .andExpect(status().isCreated())
@@ -86,6 +114,8 @@ public class AuthorControllerIT {
 
     @Test
     void shouldUpdateAndFetchAuthor() throws Exception {
+        String token = getToken(ADMINNAME, PASSWORD);
+
         UUID id = second.getId();
 
         String requestJson = """
@@ -98,6 +128,7 @@ public class AuthorControllerIT {
                 """;
 
         mockMvc.perform(put("/api/authors/" + id.toString())
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson))
                 .andExpect(status().isOk())
@@ -110,12 +141,35 @@ public class AuthorControllerIT {
 
     @Test
     void shouldDeleteAuthor() throws Exception {
+        String token = getToken(ADMINNAME, PASSWORD);
         UUID id = third.getId();
 
-        mockMvc.perform(delete("/api/authors/" + id.toString()))
+        mockMvc.perform(delete("/api/authors/" + id.toString())
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
                 .andExpect(status().isNoContent());
 
         assertFalse(authorRepository.findById(id).isPresent());
+    }
+
+    private String getToken(String username, String password) throws Exception {
+
+        String loginRequest = """
+                {
+                    "username": "%s",
+                    "password": "%s"
+                }
+                """.formatted(username, password);
+        MvcResult result = mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(loginRequest))
+                .andExpect(status().isOk())
+                .andReturn();
+        String responseBody = result.getResponse().getContentAsString();
+
+        return new ObjectMapper()
+                .readTree(responseBody)
+                .get("token")
+                .asText();
     }
 
 }

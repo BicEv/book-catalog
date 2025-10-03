@@ -7,27 +7,51 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.UUID;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
-import ru.bicev.book_catalog.TestSecurityConfig;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import ru.bicev.book_catalog.security.entity.User;
+import ru.bicev.book_catalog.security.repo.UserRepository;
+import ru.bicev.book_catalog.security.util.Role;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Import(TestSecurityConfig.class)
 @ActiveProfiles("test")
 public class GlobalExceptionHandlerIT {
 
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     private UUID notExistingId = UUID.randomUUID();
+
+    private User user;
+    private final String USERNAME = "testUser";
+    private final String PASSWORD = "test_password";
+
+    @BeforeEach
+    void setUp() {
+        userRepository.deleteAll();
+
+        user = new User(null, USERNAME, passwordEncoder.encode(PASSWORD), Role.USER);
+        userRepository.save(user);
+    }
 
     @Test
     void testAuthorNotFoundHandler() throws Exception {
@@ -47,6 +71,8 @@ public class GlobalExceptionHandlerIT {
 
     @Test
     void testMethodArgumentNotValidHandler() throws Exception {
+        String token = getToken(USERNAME, PASSWORD);
+
         String requestJson = """
                 {
                     "firstName": "",
@@ -57,6 +83,7 @@ public class GlobalExceptionHandlerIT {
 
                 """;
         mockMvc.perform(post("/api/authors")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson))
                 .andExpect(status().isBadRequest())
@@ -70,6 +97,8 @@ public class GlobalExceptionHandlerIT {
 
     @Test
     void testMethodArgumentNotValidHandlerWithMaxBirthYear() throws Exception {
+        String token = getToken(USERNAME, PASSWORD);
+
         String requestJson = """
                 {
                     "firstName": "Test",
@@ -80,6 +109,7 @@ public class GlobalExceptionHandlerIT {
 
                 """;
         mockMvc.perform(post("/api/authors")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson))
                 .andExpect(status().isBadRequest())
@@ -91,6 +121,8 @@ public class GlobalExceptionHandlerIT {
 
     @Test
     void testMethodArgumentNotValidHandlerWithMaxReleaseYear() throws Exception {
+        String token = getToken(USERNAME, PASSWORD);
+
         UUID id = UUID.randomUUID();
 
         String requestJson = String.format("""
@@ -103,6 +135,7 @@ public class GlobalExceptionHandlerIT {
 
                 """, id);
         mockMvc.perform(post("/api/books")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson))
                 .andExpect(status().isBadRequest())
@@ -114,6 +147,8 @@ public class GlobalExceptionHandlerIT {
 
     @Test
     void testInternalServerError() throws Exception {
+        String token = getToken(USERNAME, PASSWORD);
+
         UUID id = UUID.randomUUID();
 
         String requestJson = String.format("""
@@ -127,6 +162,7 @@ public class GlobalExceptionHandlerIT {
                 """, id);
 
         mockMvc.perform(post("/api/books")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson))
                 .andExpect(status().isInternalServerError())
@@ -136,6 +172,8 @@ public class GlobalExceptionHandlerIT {
 
     @Test
     void testDataIntegrityViolation() throws Exception {
+        String token = getToken(USERNAME, PASSWORD);
+
         String requestJson = """
                 {
                     "firstName": "Test",
@@ -146,17 +184,40 @@ public class GlobalExceptionHandlerIT {
 
                 """;
         mockMvc.perform(post("/api/authors")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson))
                 .andExpect(status().isCreated());
 
         mockMvc.perform(post("/api/authors")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.statusCode").value(409))
                 .andExpect(jsonPath("$.errorCode").value("CONFLICT"));
 
+    }
+
+    private String getToken(String username, String password) throws Exception {
+
+        String loginRequest = """
+                {
+                    "username": "%s",
+                    "password": "%s"
+                }
+                """.formatted(username, password);
+        MvcResult result = mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(loginRequest))
+                .andExpect(status().isOk())
+                .andReturn();
+        String responseBody = result.getResponse().getContentAsString();
+
+        return new ObjectMapper()
+                .readTree(responseBody)
+                .get("token")
+                .asText();
     }
 
 }

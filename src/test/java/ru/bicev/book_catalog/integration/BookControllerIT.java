@@ -15,21 +15,26 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
-import ru.bicev.book_catalog.TestSecurityConfig;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import ru.bicev.book_catalog.entity.Author;
 import ru.bicev.book_catalog.entity.Book;
 import ru.bicev.book_catalog.repo.AuthorRepository;
 import ru.bicev.book_catalog.repo.BookRepository;
+import ru.bicev.book_catalog.security.entity.User;
+import ru.bicev.book_catalog.security.repo.UserRepository;
+import ru.bicev.book_catalog.security.util.Role;
 import ru.bicev.book_catalog.util.Genre;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Import(TestSecurityConfig.class)
 @ActiveProfiles("test")
 public class BookControllerIT {
 
@@ -42,6 +47,12 @@ public class BookControllerIT {
     @Autowired
     private BookRepository bookRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     private Author first;
     private Author second;
     private Book one;
@@ -49,11 +60,23 @@ public class BookControllerIT {
     private Book three;
     private Book four;
     private Book five;
+    private User user;
+    private User admin;
+    private final String USERNAME = "testUser";
+    private final String ADMINNAME = "testAdmin";
+    private final String PASSWORD = "test_password";
 
     @BeforeEach
     void setUp() {
         bookRepository.deleteAll();
         authorRepository.deleteAll();
+        userRepository.deleteAll();
+
+        user = new User(null, USERNAME, passwordEncoder.encode(PASSWORD), Role.USER);
+        userRepository.save(user);
+
+        admin = new User(null, ADMINNAME, passwordEncoder.encode(PASSWORD), Role.ADMIN);
+        userRepository.save(admin);
 
         first = authorRepository.save(new Author(UUID.randomUUID(), "First", "Author", 1900, "One"));
         second = authorRepository.save(new Author(UUID.randomUUID(), "Second", "Writer", 1969, "Two"));
@@ -69,6 +92,7 @@ public class BookControllerIT {
 
     @Test
     void shouldCreateAndFetchBook() throws Exception {
+        String token = getToken(USERNAME, PASSWORD);
 
         UUID authorId = first.getId();
         String requestJson = String.format("""
@@ -81,6 +105,7 @@ public class BookControllerIT {
                 """, authorId.toString());
 
         mockMvc.perform(post("/api/books")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson))
                 .andExpect(status().isCreated())
@@ -115,6 +140,8 @@ public class BookControllerIT {
 
     @Test
     void shouldUpdateAndFetchBook() throws Exception {
+        String token = getToken(ADMINNAME, PASSWORD);
+
         UUID bookId = four.getId();
         UUID authorId = second.getId();
         String requestJson = String.format("""
@@ -127,6 +154,7 @@ public class BookControllerIT {
                 """, authorId.toString());
 
         mockMvc.perform(put("/api/books/" + bookId.toString())
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson))
                 .andExpect(status().isOk())
@@ -143,9 +171,12 @@ public class BookControllerIT {
 
     @Test
     void shouldDeleteBook() throws Exception {
+        String token = getToken(ADMINNAME, PASSWORD);
+
         UUID id = five.getId();
 
-        mockMvc.perform(delete("/api/books/" + id.toString()))
+        mockMvc.perform(delete("/api/books/" + id.toString())
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
                 .andExpect(status().isNoContent());
 
         assertTrue(bookRepository.findById(id).isEmpty());
@@ -223,6 +254,27 @@ public class BookControllerIT {
                 .andExpect(jsonPath("$.totalPages").value(1))
                 .andExpect(jsonPath("$.last").value(true));
 
+    }
+
+    private String getToken(String username, String password) throws Exception {
+
+        String loginRequest = """
+                {
+                    "username": "%s",
+                    "password": "%s"
+                }
+                """.formatted(username, password);
+        MvcResult result = mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(loginRequest))
+                .andExpect(status().isOk())
+                .andReturn();
+        String responseBody = result.getResponse().getContentAsString();
+
+        return new ObjectMapper()
+                .readTree(responseBody)
+                .get("token")
+                .asText();
     }
 
 }
