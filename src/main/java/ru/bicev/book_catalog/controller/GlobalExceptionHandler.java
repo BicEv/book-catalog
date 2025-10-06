@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -17,6 +18,8 @@ import ru.bicev.book_catalog.dto.ErrorDto;
 import ru.bicev.book_catalog.dto.ValidationErrorDto;
 import ru.bicev.book_catalog.exception.AuthorNotFoundException;
 import ru.bicev.book_catalog.exception.BookNotFoundException;
+import ru.bicev.book_catalog.exception.UserNotFoundException;
+import ru.bicev.book_catalog.exception.UsernameAlreadyExistsException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -67,6 +70,30 @@ public class GlobalExceptionHandler {
         HttpStatus status = HttpStatus.CONFLICT;
         ErrorDto error = extractError(ex, "CONFLICT", status);
         logger.error("DataIntegrityViolationException: {}", ex.getMessage(), ex);
+        return ResponseEntity.status(status).body(error);
+    }
+
+    @ExceptionHandler(UsernameAlreadyExistsException.class)
+    public ResponseEntity<ErrorDto> handleUsernameAlreadyExistsException(UsernameAlreadyExistsException ex) {
+        HttpStatus status = HttpStatus.CONFLICT;
+        ErrorDto error = extractError(ex, "CONFLICT", status);
+        logger.error("UsernameAlreadyExsitsException: {}", ex.getMessage(), ex);
+        return ResponseEntity.status(status).body(error);
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ErrorDto> handleUserNotFoundException(UserNotFoundException ex) {
+        HttpStatus status = HttpStatus.NOT_FOUND;
+        ErrorDto error = extractError(ex, "NOT_FOUND", status);
+        logger.error("UserNotFoundException: {}", ex.getMessage(), ex);
+        return ResponseEntity.status(status).body(error);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorDto> handleAccessDeniedException(AccessDeniedException ex) {
+        HttpStatus status = HttpStatus.FORBIDDEN;
+        ErrorDto error = extractError(ex, "FORBIDDEN", status);
+        logger.error("UserNotFoundException: {}", ex.getMessage(), ex);
         return ResponseEntity.status(status).body(error);
     }
 
