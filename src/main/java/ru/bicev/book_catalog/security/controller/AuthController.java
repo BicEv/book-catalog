@@ -1,4 +1,4 @@
-package ru.bicev.book_catalog.security.auth;
+package ru.bicev.book_catalog.security.controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
