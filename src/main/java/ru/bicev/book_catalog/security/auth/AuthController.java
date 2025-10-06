@@ -1,5 +1,7 @@
 package ru.bicev.book_catalog.security.auth;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -17,6 +19,7 @@ import ru.bicev.book_catalog.security.jwt.JwtUtil;
 @RequestMapping("/api/auth")
 public class AuthController {
 
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
 
@@ -31,8 +34,10 @@ public class AuthController {
             Authentication auth = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(userRequest.username(), userRequest.password()));
             TokenDto token = new TokenDto(jwtUtil.generateToken(userRequest.username()));
+            logger.debug("User logged in: {}", userRequest.username());
             return ResponseEntity.ok(token);
         } catch (Exception e) {
+            logger.error("Exception in AuthController: {}", e);
             return ResponseEntity.status(401).build();
         }
     }
