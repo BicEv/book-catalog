@@ -47,6 +47,9 @@ public class AuthorControllerIT {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     private Author first;
     private Author second;
     private Author third;
@@ -166,7 +169,7 @@ public class AuthorControllerIT {
                 .andReturn();
         String responseBody = result.getResponse().getContentAsString();
 
-        return new ObjectMapper()
+        return objectMapper
                 .readTree(responseBody)
                 .get("token")
                 .asText();

@@ -53,6 +53,9 @@ public class BookControllerIT {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     private Author first;
     private Author second;
     private Book one;
@@ -271,7 +274,7 @@ public class BookControllerIT {
                 .andReturn();
         String responseBody = result.getResponse().getContentAsString();
 
-        return new ObjectMapper()
+        return objectMapper
                 .readTree(responseBody)
                 .get("token")
                 .asText();
