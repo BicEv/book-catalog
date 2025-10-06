@@ -11,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
+import ru.bicev.book_catalog.dto.PagedResponse;
 import ru.bicev.book_catalog.exception.UserNotFoundException;
 import ru.bicev.book_catalog.exception.UsernameAlreadyExistsException;
 import ru.bicev.book_catalog.security.auth.CustomUserDetails;
@@ -88,10 +89,20 @@ public class UserService {
         userRepository.deleteById(userId);
     }
 
-    // to-do change to PagedResponse<UserDto>
-    public Page<UserDto> getAllUsers(Pageable pageable) {
+    public PagedResponse<UserDto> getAllUsers(Pageable pageable) {
         logger.debug("All users were retrieved");
-        return userRepository.findAll(pageable).map(user -> new UserDto(user.getId(), user.getUsername()));
+        return toPagedResponse(
+                userRepository.findAll(pageable)
+                        .map(user -> new UserDto(user.getId(), user.getUsername())));
+    }
+
+    private PagedResponse<UserDto> toPagedResponse(Page<UserDto> page) {
+        return new PagedResponse<>(page.getContent(), page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.isFirst(),
+                page.isLast());
     }
 
     private boolean isCurrentUserOrAdmin(Long targetId) {

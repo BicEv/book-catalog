@@ -26,6 +26,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import ru.bicev.book_catalog.dto.PagedResponse;
 import ru.bicev.book_catalog.exception.UserNotFoundException;
 import ru.bicev.book_catalog.exception.UsernameAlreadyExistsException;
 import ru.bicev.book_catalog.security.auth.CustomUserDetails;
@@ -189,11 +190,11 @@ public class UserServiceTest {
 
         when(userRepository.findAll(pageable)).thenReturn(page);
 
-        Page<UserDto> foundUsers = userService.getAllUsers(pageable);
+        PagedResponse<UserDto> foundUsers = userService.getAllUsers(pageable);
 
-        assertEquals(user.getUsername(), foundUsers.getContent().get(0).username());
-        assertEquals(admin.getUsername(), foundUsers.getContent().get(1).username());
-        assertEquals(notCurrent.getUsername(), foundUsers.getContent().get(2).username());
+        assertEquals(user.getUsername(), foundUsers.content().get(0).username());
+        assertEquals(admin.getUsername(), foundUsers.content().get(1).username());
+        assertEquals(notCurrent.getUsername(), foundUsers.content().get(2).username());
 
     }
 
