@@ -77,8 +77,10 @@ public class UserRestControllerIT {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(userRequest))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").isNotEmpty())
-                .andExpect(jsonPath("$.username").value(TEST_USERNAME));
+                .andExpect(jsonPath("$.token.token").isNotEmpty())
+                .andExpect(jsonPath("$.user.id").isNumber())
+                .andExpect(jsonPath("$.user.username").value(TEST_USERNAME));
+
     }
 
     @Test
@@ -117,7 +119,8 @@ public class UserRestControllerIT {
         mockMvc.perform(get("/api/users/" + id)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.errorCode").value("FORBIDDEN"));;
+                .andExpect(jsonPath("$.errorCode").value("FORBIDDEN"));
+        ;
     }
 
     @Test
@@ -202,7 +205,8 @@ public class UserRestControllerIT {
         mockMvc.perform(delete("/api/users/" + id)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.errorCode").value("NOT_FOUND"));;
+                .andExpect(jsonPath("$.errorCode").value("NOT_FOUND"));
+        ;
 
     }
 
