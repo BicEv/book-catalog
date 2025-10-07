@@ -221,6 +221,15 @@ public class UserRestControllerIT {
                 .andExpect(jsonPath("$.errorCode").value("FORBIDDEN"));
     }
 
+    @Test
+    void shouldReturnUnauthorized() throws Exception {
+        Long id = second.getId();
+        mockMvc.perform(delete("/api/users/" + id))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.errorCode").value("UNAUTHORIZED"))
+                .andExpect(jsonPath("$.statusCode").value(401));
+    }
+
     private String getToken(String username, String password) throws Exception {
 
         String loginRequest = """
