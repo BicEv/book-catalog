@@ -77,9 +77,9 @@ public class UserRestControllerIT {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(userRequest))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.token.token").isNotEmpty())
-                .andExpect(jsonPath("$.user.id").isNumber())
-                .andExpect(jsonPath("$.user.username").value(TEST_USERNAME));
+                .andExpect(jsonPath("$.token").isNotEmpty())
+                .andExpect(jsonPath("$.id").isNumber())
+                .andExpect(jsonPath("$.username").value(TEST_USERNAME));
 
     }
 

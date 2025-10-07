@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
+import ru.bicev.book_catalog.dto.AuthResponse;
 import ru.bicev.book_catalog.dto.PagedResponse;
 import ru.bicev.book_catalog.security.dto.TokenDto;
 import ru.bicev.book_catalog.security.dto.UserDto;
@@ -48,7 +49,7 @@ public class UserRestController {
     }
 
     @PostMapping
-    public ResponseEntity<Map<String, Object>> registerUser(@RequestBody @Valid UserRequest userRequest,
+    public ResponseEntity<AuthResponse> registerUser(@RequestBody @Valid UserRequest userRequest,
             @RequestParam(defaultValue = "USER") Role role) {
 
         logger.debug("Register request - username: {}, role: {}", userRequest.username(), role);
@@ -62,9 +63,8 @@ public class UserRestController {
 
         String token = jwtUtil.generateToken(createdUser.username());
 
-        Map<String, Object> response = Map.of(
-                "token", new TokenDto(token),
-                "user", createdUser);
+        AuthResponse response = new AuthResponse(token, createdUser.id(), createdUser.username());
+        
         return ResponseEntity.created(location).body(response);
     }
 
