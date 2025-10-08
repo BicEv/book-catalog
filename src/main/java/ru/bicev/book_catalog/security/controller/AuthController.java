@@ -11,6 +11,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import ru.bicev.book_catalog.security.dto.TokenDto;
 import ru.bicev.book_catalog.security.dto.UserRequest;
 import ru.bicev.book_catalog.security.jwt.JwtUtil;
@@ -28,8 +33,13 @@ public class AuthController {
         this.jwtUtil = jwtUtil;
     }
 
+    @Operation(summary = "Login")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User succesfully logged in", content = @Content(schema = @Schema(implementation = TokenDto.class))),
+            @ApiResponse(responseCode = "401", description = "Bad credentials")
+    })
     @PostMapping("/login")
-    public ResponseEntity<TokenDto> login(@RequestBody UserRequest userRequest) {
+    public ResponseEntity<TokenDto> login(@RequestBody(required = true) UserRequest userRequest) {
         try {
             Authentication auth = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(userRequest.username(), userRequest.password()));
