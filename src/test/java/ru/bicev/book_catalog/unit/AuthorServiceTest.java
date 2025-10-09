@@ -8,6 +8,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -16,9 +17,14 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import ru.bicev.book_catalog.dto.AuthorDto;
 import ru.bicev.book_catalog.dto.AuthorRequest;
+import ru.bicev.book_catalog.dto.PagedResponse;
 import ru.bicev.book_catalog.entity.Author;
 import ru.bicev.book_catalog.exception.AuthorNotFoundException;
 import ru.bicev.book_catalog.repo.AuthorRepository;
@@ -77,6 +83,25 @@ public class AuthorServiceTest {
         assertEquals(entity.getCountry(), found.country());
 
         verify(authorRepository, times(1)).findById(authorId);
+    }
+
+    @Test
+    void getAllAuthorSuccess() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Author> page = new PageImpl<>(List.of(entity));
+
+        when(authorRepository.findAll(pageable)).thenReturn(page);
+
+        PagedResponse<AuthorDto> authors = authorService.findAll(pageable);
+
+        assertEquals(1, authors.content().size());
+        assertEquals(entity.getFirstName(), authors.content().get(0).firstName());
+        assertEquals(entity.getLastName(), authors.content().get(0).lastName());
+        assertEquals(pageable.getPageNumber(), authors.page());
+        assertEquals(page.getTotalPages(), authors.totalPages());
+
+        verify(authorRepository, times(1)).findAll(pageable);
+
     }
 
     @Test

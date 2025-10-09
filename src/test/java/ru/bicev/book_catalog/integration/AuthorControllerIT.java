@@ -116,6 +116,16 @@ public class AuthorControllerIT {
     }
 
     @Test
+    void shouldFindAllAuthors() throws Exception {
+        mockMvc.perform(get("/api/authors"))
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[2].firstName").value(first.getFirstName()))
+                .andExpect(jsonPath("$.totalElements").value(3))
+                .andExpect(jsonPath("$.size").value(10))
+                .andExpect(jsonPath("$.last").value(true));
+    }
+
+    @Test
     void shouldUpdateAndFetchAuthor() throws Exception {
         String token = getToken(ADMINNAME, PASSWORD);
 

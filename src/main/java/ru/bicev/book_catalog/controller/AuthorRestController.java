@@ -5,6 +5,9 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -26,6 +30,7 @@ import jakarta.validation.Valid;
 import ru.bicev.book_catalog.dto.AuthorDto;
 import ru.bicev.book_catalog.dto.AuthorRequest;
 import ru.bicev.book_catalog.dto.ErrorDto;
+import ru.bicev.book_catalog.dto.PagedResponse;
 import ru.bicev.book_catalog.service.AuthorService;
 
 @RestController
@@ -66,6 +71,20 @@ public class AuthorRestController {
         logger.info("GET /api/authors authorId: {}", authorId);
         AuthorDto author = authorService.findAuthorById(authorId);
         return ResponseEntity.ok().body(author);
+    }
+
+    @Operation(summary = "Get all authors", description = "Find all authors and return PagedResponse")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Authors retrieved", content = @Content(schema = @Schema(implementation = PagedResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+    })
+    @GetMapping
+    public ResponseEntity<PagedResponse<AuthorDto>> getAllAuthors(
+            @ParameterObject @PageableDefault(page = 0, size = 10, sort = "lastName") Pageable pageable) {
+        logger.info("GET /api/authors");
+        PagedResponse<AuthorDto> authors = authorService.findAll(pageable);
+        return ResponseEntity.ok().body(authors);
+
     }
 
     @Operation(summary = "Update author", security = @SecurityRequirement(name = "bearerAuth"), description = "Update existing author and return updated AuthorDto")

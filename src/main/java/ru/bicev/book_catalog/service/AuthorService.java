@@ -4,11 +4,14 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import ru.bicev.book_catalog.dto.AuthorDto;
 import ru.bicev.book_catalog.dto.AuthorRequest;
+import ru.bicev.book_catalog.dto.PagedResponse;
 import ru.bicev.book_catalog.entity.Author;
 import ru.bicev.book_catalog.exception.AuthorNotFoundException;
 import ru.bicev.book_catalog.repo.AuthorRepository;
@@ -38,6 +41,20 @@ public class AuthorService {
                 .orElseThrow(() -> new AuthorNotFoundException(String.format("Author not found: %s", authorId)));
         logger.debug("Fetched author by id {}: {}", authorId, foundAuthor);
         return AuthorMapper.toDto(foundAuthor);
+    }
+
+    public PagedResponse<AuthorDto> findAll(Pageable pageable) {
+        Page<AuthorDto> page = authorRepository.findAll(pageable).map(AuthorMapper::toDto);
+        PagedResponse<AuthorDto> result = new PagedResponse<>(
+                page.getContent(),
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.isFirst(),
+                page.isLast());
+        logger.debug("Fetched all authors - page number: {}, total pages: {}", page.getNumber(), page.getTotalPages());
+        return result;
     }
 
     @Transactional
