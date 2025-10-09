@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Paged response with content, page info and metadata")
 public record PagedResponse<T>(
 
-        @Schema(description = "List of items") List<T> content,
+        @Schema(description = "List of items",example = "[items]") List<T> content,
         @Schema(description = "Current page number", example = "0") int page,
         @Schema(description = "Current page size", example = "10") int size,
         @Schema(description = "Total number of elements", example = "100") long totalElements,

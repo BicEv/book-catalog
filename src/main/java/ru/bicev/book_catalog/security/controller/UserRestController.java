@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -107,7 +108,7 @@ public class UserRestController {
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PagedResponse<UserDto>> getAllUsers(
-            @ParameterObject @PageableDefault(page = 0, size = 10, sort = "id,asc") Pageable pageable) {
+            @ParameterObject @PageableDefault(page = 0, size = 10, sort = "username", direction = Sort.Direction.ASC) Pageable pageable) {
         logger.info("All users retrieved");
         PagedResponse<UserDto> users = userService.getAllUsers(pageable);
         return ResponseEntity.ok().body(users);
